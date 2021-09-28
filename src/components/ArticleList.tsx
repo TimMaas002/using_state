@@ -1,34 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Timeout from "await-timeout";
+import axios from "axios";
 
 import ArticleCard, { Article } from "./ArticleCard";
 
 export default function ArticleList() {
-  const [articles, setArticles] = useState<Article[]>([
-    {
-      id: 1,
-      title: "What is React all about?",
-      content:
-        "React is all about one-way data flow, the Virtual DOM, and transpiling JSX.",
-    },
-    {
-      id: 2,
-      title: "A lovely kid",
-      content: "In fact, a kid is also the name of a baby goat!",
-    },
-    {
-      id: 3,
-      title: "On placeholder image URLs",
-      content:
-        "So yeah, you won't be able to look these images up. They're placeholders",
-    },
-  ]);
+  const [articles, setArticles] = useState<Article[]>();
+
+  const clear = () => {
+    setArticles([]);
+  };
+
+  useEffect(() => {
+    async function doSomeDataFetching() {
+      console.log("I'm gonna fetch some data!");
+
+      await Timeout.set(2000);
+
+      // Getting back data from the net, through the wire, air, and the ocean:
+      const res = await axios.get(
+        "https://jsonplaceholder.typicode.com/posts?_limit=5"
+      );
+
+      console.log("Got back:", res);
+      setArticles(
+        res.data.map((item: any) => {
+          return {
+            id: item.id,
+            title: item.title,
+            content: item.body,
+          };
+        })
+      );
+    }
+
+    doSomeDataFetching();
+  }, [setArticles]);
 
   return (
     <div>
+      <p>
+        <button onClick={clear}>Clear articles</button>
+      </p>
       <p>Here's a lovely list of articles, for your reading pleasure:</p>
-      {articles.map((article) => {
-        return <ArticleCard key={article.id} article={article} />;
-      })}
+      {articles ? (
+        articles.map((article) => {
+          return <ArticleCard key={article.id} article={article} />;
+        })
+      ) : (
+        <p>Loading articles...</p>
+      )}
     </div>
   );
 }
